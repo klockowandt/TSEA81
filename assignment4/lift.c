@@ -206,15 +206,15 @@ char everyone_has_jumped_on(lift_type lift){
    shall move again. */
 void lift_has_arrived(lift_type lift)
 {
-  printf("Lift arrived\n");
+  //printf("Lift arrived\n");
 
   
   // Kontrollera så att alla hinner hoppa på och/eller av som vill göra det på denna våning
   while(!everyone_has_jumped_off(lift)){
-    printf("Wait for off\n");
+    //printf("Wait for off\n");
   }  
   while(!everyone_has_jumped_on(lift)){
-    printf("Wait for on\n");
+    //printf("Wait for on\n");
   }
 
 }
@@ -347,37 +347,3 @@ char enter_lift(lift_type lift, int id, int to_floor){
   }
   return -1;
 }
-
-
-/* MONITOR function lift_travel: performs a journey with the lift
-   starting at from_floor, and ending at to_floor */ 
-/*void lift_travel(lift_type lift, int id, int from_floor, int to_floor)
-{
-  
-  // Create the person at the enter_floor
-  enter_floor(lift, id, from_floor);
-  
-  // Waits until the lift is at the from_floor
-  //conditional_wait(passenger_wait_for_lift(lift, from_floor));
-  while(passenger_wait_for_lift(lift, from_floor)){
-    printf("%d: Wait for lift to jump on %d\n",id,from_floor);
-  }
-  
-  // Jumps on the lift
-  int index = enter_lift(lift, id, to_floor);
-  if (index != -1){
-    printf("%d hoppa pa hiss!\n",id);
-    leave_floor(lift, id, from_floor);
-  }
-  
-  // Waits until the lift is at the to_floor
-  //conditional_wait(passenger_wait_for_exit(lift, to_floor));
-  while(passenger_wait_for_exit(lift, to_floor)){
-    printf("%d: Wait for floor to jump off at %d\n",id,to_floor);
-  }
-  printf("%d hoppa av hiss!\n",id);
-  leave_lift(lift,id,index);
-
-  }*/
-
-/* --- functions related to person task END --- */

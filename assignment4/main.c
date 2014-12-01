@@ -5,6 +5,9 @@
 #include <semaphore.h>
 #include <signal.h>
 #include <unistd.h>
+//#include <iostream.h>
+//#include <conio.h>
+#include <termios.h>
 #include "lift.h"
 #include "si_ui.h"
 #include "messages.h"
@@ -14,6 +17,9 @@
 #define PORT_UI 0
 #define PORT_LIFT 1
 #define PORT_FIRSTPERSON 10
+#define N_ITERATIONS 100
+
+
 
 // These variables keeps track of the process IDs of all processes
 // involved in the application so that they can be killed when the
@@ -138,7 +144,7 @@ static void lift_process(void)
 		case LIFT_TRAVEL:
 		  // TODO:
 		  //    Update the Lift structure so that the person with the given ID  is now present on the floor
-		  // Create the person at the enter_floor
+		  // Cxoreate the person at the enter_floor
 		  printf("Fixar in gubbe på våning\n");
 		  enter_floor(Lift, m->person_id, m->from_floor, m->to_floor);
 		  
@@ -156,7 +162,8 @@ static void person_process(int id)
 	char buf[4096];
 	struct lift_msg* m = malloc(sizeof(struct lift_msg));
 	int to, from;
-	while(1){
+	int i; 
+	for(i = 0; i < N_ITERATIONS; i++){
 	  // TODO:
 	  //    Generate a to and from floor
 	  //    Send a LIFT_TRAVEL message to the lift process
@@ -186,8 +193,8 @@ static void person_process(int id)
 	  }while(m->person_id != id);
 	  printf("Åkt klart!\n");
 	  // * Wait a little while
-	  sleep(2);
-	  printf("Tillbaka i byggnad\n");
+	  /* sleep(2); */
+	  //printf("Tillbaka i byggnad\n");
 	}
 }
 
@@ -195,6 +202,7 @@ static void person_process(int id)
 // It is responsible for:
 //   * Receiving and executing commands from the java GUI
 //   * Killing off all processes when exiting the application
+/*
 void uicommand_process(void)
 {
 	int i;
@@ -213,7 +221,7 @@ void uicommand_process(void)
 		    
 		    pid_t p_pid = fork();
 		    if(!p_pid) {
-		      printf("################Skapar person process\n");
+		      //printf("################Skapar person process\n");
 		      person_process(current_person_id);
 		    }
 		    person_pid[current_person_id] = p_pid;
@@ -240,7 +248,7 @@ void uicommand_process(void)
 		}
 	}
 }
-
+*/
 // This process is responsible for drawing the lift. Receives lift_type structures
 // as messages.
 void uidraw_process(void)
@@ -272,7 +280,37 @@ int main(int argc, char **argv)
 	if(!liftmove_pid){
 		liftmove_process();
 	}
-	uicommand_process();
-
+	//uicommand_process();
+	
+	int i;
+	for(i = 0; i < MAX_N_PERSONS; i++){
+	  pid_t p_pid = fork();
+	  if(!p_pid) {
+	    printf("################Skapar person process\n");
+	    person_process(i);
+	  }
+	  person_pid[i] = p_pid;
+	}
+	
+	
+	
+	
+	//while (getchar() != '\n');
+	getchar();	
+	// The code below sends the SIGINT signal to
+	// all processes involved in this application
+	// except for the uicommand process itself
+	// (which is exited by calling exit())
+	kill(uidraw_pid, SIGINT);
+	kill(lift_pid, SIGINT);
+	kill(liftmove_pid, SIGINT);
+	for(i=0; i < MAX_N_PERSONS; i++){
+	  if(person_pid[i] > 0){
+	    kill(person_pid[i], SIGINT);
+	  }
+	}
+	//exit(0);
+	
+	
 	return 0;
 }
