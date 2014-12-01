@@ -4,9 +4,13 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include "lift.h"
 #include "debug.h"
 #include "si_ui.h"
+
+#define N_ITERATIONS 10000
+
 
 
 // Unfortunately the rand() function is not thread-safe. However, the
@@ -71,23 +75,35 @@ static void *passenger_thread(void *idptr)
 	// Code that reads the passenger ID from the idptr pointer
 	// (due to the way pthread_create works we need to first cast
 	// the void pointer to an int pointer).
-
 	int *tmp = (int *) idptr;
 	int id = *tmp;
 	sem_post(&mutex);
+
+
+	struct timeval starttime;
+	struct timeval endtime;
+	long long int timediff;
+	gettimeofday(&starttime, NULL);
+	
 	int to, from;
-	while(1){
+	int i;
+	for(i = 0; i < N_ITERATIONS; i++){
 	  // * Select random floors
 	  to = get_random_value(id, N_FLOORS-1);
 	  while((from = get_random_value(id, N_FLOORS-1)) == to);
 	  // * Travel between these floors
 	  lift_travel(Lift, id, from, to);
 	  // * Wait a little while
-	  sleep(1);
+	  //sleep(1);
 	}
+	
+	gettimeofday(&endtime, NULL);
+	timediff = (endtime.tv_sec*1000000ULL + endtime.tv_usec) - (starttime.tv_sec*1000000ULL + starttime.tv_usec);
+	printf("Time for person %d: %lld\n", id, timediff);
+	
 	return NULL;
 }
-
+/*
 static void *user_thread(void *unused)
 {
 	int current_passenger_id = 0;
@@ -125,7 +141,7 @@ static void *user_thread(void *unused)
 	}
 	return NULL;
 }
-
+*/
 
 int main(int argc, char **argv)
 {
@@ -136,14 +152,24 @@ int main(int argc, char **argv)
 
         // Create tasks as appropriate here
 	/* create tasks */ 
-	pthread_t user_thread_handle;
+	//pthread_t user_thread_handle;
 	pthread_t lift_thread_handle;
 	
-	pthread_create(&user_thread_handle, NULL, user_thread, 0);
+	//pthread_create(&user_thread_handle, NULL, user_thread, 0);
 	pthread_create(&lift_thread_handle, NULL, lift_thread, 0);
 	
+	int i;
+	for(i = 0; i < MAX_N_PERSONS; i++){
+	  pthread_t handle;
+	  pthread_create(&handle, NULL, passenger_thread, (void*) &i);
+	  
+	  sem_wait(&mutex);
+	  pthread_detach(handle); // Ensure resources are reclaimed appropriately
+	}
+	
+	
 	pthread_join(lift_thread_handle, NULL);
-	pthread_join(user_thread_handle, NULL);
+	//pthread_join(user_thread_handle, NULL);
 	
 	
 	return 0;

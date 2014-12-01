@@ -140,7 +140,7 @@ void lift_move(lift_type lift, int next_floor, int change_direction)
     pthread_mutex_unlock(&lift->mutex); 
         
     /* it takes two seconds to move to the next floor */ 
-    usleep(500000);
+    //usleep(500000);
         
     /* reserve lift */ 
     pthread_mutex_lock(&lift->mutex); 
@@ -158,8 +158,8 @@ void lift_move(lift_type lift, int next_floor, int change_direction)
     }
     
     /* draw, since a change has occurred */ 
-    draw_lift(lift); 
-
+    //draw_lift(lift); 
+    
     /* release lift */ 
     pthread_mutex_unlock(&lift->mutex); 
     
@@ -213,7 +213,7 @@ char everyone_has_jumped_on(lift_type lift){
    shall move again. */
 void lift_has_arrived(lift_type lift)
 {
-  printf("Lift arrived\n");
+  //printf("Lift arrived\n");
   pthread_cond_broadcast(&lift->change);
   
   
@@ -222,11 +222,11 @@ void lift_has_arrived(lift_type lift)
   
   // Kontrollera så att alla hinner hoppa på och/eller av som vill göra det på denna våning
   while(!everyone_has_jumped_off(lift)){
-    printf("Wait for off\n");
+    //printf("Wait for off\n");
     pthread_cond_wait(&lift->change, &lift->mutex);
   }  
   while(!everyone_has_jumped_on(lift)){
-    printf("Wait for on\n");
+    //printf("Wait for on\n");
     pthread_cond_wait(&lift->change, &lift->mutex);
   }
 
@@ -378,7 +378,7 @@ void lift_travel(lift_type lift, int id, int from_floor, int to_floor)
   // Waits until the lift is at the from_floor
   //conditional_wait(passenger_wait_for_lift(lift, from_floor));
   while(passenger_wait_for_lift(lift, from_floor)){
-    printf("%d: Wait for lift to jump on %d\n",id,from_floor);
+    //printf("%d: Wait for lift to jump on %d\n",id,from_floor);
     //draw_lift(lift); 
     pthread_cond_wait(&lift->change, &lift->mutex);
   }
@@ -386,7 +386,7 @@ void lift_travel(lift_type lift, int id, int from_floor, int to_floor)
   // Jumps on the lift
   int index = enter_lift(lift, id, to_floor);
   if (index != -1){
-    printf("%d hoppa pa hiss!\n",id);
+    //printf("%d hoppa pa hiss!\n",id);
     leave_floor(lift, id, from_floor);
   }
   pthread_cond_broadcast(&lift->change);
@@ -394,10 +394,10 @@ void lift_travel(lift_type lift, int id, int from_floor, int to_floor)
   // Waits until the lift is at the to_floor
   //conditional_wait(passenger_wait_for_exit(lift, to_floor));
   while(passenger_wait_for_exit(lift, to_floor)){
-    printf("%d: Wait for floor to jump off at %d\n",id,to_floor);
+    //printf("%d: Wait for floor to jump off at %d\n",id,to_floor);
     pthread_cond_wait(&lift->change, &lift->mutex);
   }
-  printf("%d hoppa av hiss!\n",id);
+  //printf("%d hoppa av hiss!\n",id);
   leave_lift(lift,id,index);
   pthread_cond_broadcast(&lift->change);
   
