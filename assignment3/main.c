@@ -7,7 +7,7 @@
 #include <sys/time.h>
 #include "lift.h"
 #include "debug.h"
-#include "si_ui.h"
+//#include "si_ui.h"
 
 #define N_ITERATIONS 10000
 
@@ -145,7 +145,7 @@ static void *user_thread(void *unused)
 
 int main(int argc, char **argv)
 {
-	si_ui_init();
+  //si_ui_init();
 	debug_init();
 	init_random();
 	Lift = lift_create();

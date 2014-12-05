@@ -4,14 +4,14 @@
 #include <pthread.h>
 
 /* drawing module */ 
-#include "draw.h"
+//#include "draw.h"
 
 /* standard includes */ 
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#include "si_ui.h"
+//#include "si_ui.h"
 
 /* panic function, to be called when fatal errors occur */ 
 static void lift_panic(const char message[])
