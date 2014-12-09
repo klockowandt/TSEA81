@@ -168,7 +168,6 @@ static void person_process(int id)
 	struct timeval endtime;
 	long long int timediff;
 	gettimeofday(&starttime, NULL);
-	printf("Person %d starts\n", id);
 	for(i = 0; i < N_ITERATIONS; i++){
 	  // TODO:
 	  //    Generate a to and from floor
@@ -229,7 +228,7 @@ int main(int argc, char **argv)
 	for(i = 0; i < MAX_N_PERSONS; i++){
 	  pid_t p_pid = fork();
 	  if(!p_pid) {
-	    printf("################Skapar person process %d\n",i);
+	    //printf("################Skapar person process %d\n",i);
 	    person_process(i);
 	    exit(0);
 	  }
