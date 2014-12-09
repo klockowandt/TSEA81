@@ -75,12 +75,8 @@ static void lift_process(void)
 {
         lift_type Lift;
 	Lift = lift_create();
-	int change_direction, next_floor;
-	
 	char msgbuf[LENGTH];
 	while(1){
-		int i;
-		struct lift_msg reply;
 		struct lift_msg *m;
 
 		int len = message_receive(msgbuf, LENGTH, PORT_LIFT); // Wait for a message
@@ -159,11 +155,8 @@ static void person_process(int id)
 	char to;//[N_DESTINATIONS];
 	char from;//[N_DESTINATIONS];
 	int i; 
-	int j;
-	int size;
-	
-	
-	// ...
+
+
 	struct timeval starttime;
 	struct timeval endtime;
 	long long int timediff;

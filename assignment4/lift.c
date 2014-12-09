@@ -147,7 +147,7 @@ static int n_passengers_in_lift(lift_type lift)
 }
 
 int next_passenger_to_leave(lift_type lift, int floor){
-  int i,n_passengers = 0;
+  int i;
   for (i = 0; i < MAX_N_PASSENGERS; i++){
     if (lift->passengers_in_lift[i].to_floor == floor){
       return i;//lift->passengers_in_lift[i].id;
@@ -161,7 +161,7 @@ int next_passenger_to_enter(lift_type lift, int floor){
   if(lift_is_full(lift))
     return -1;
 
-  int i,n_passengers = 0;
+  int i;
   for (i = 0; i < MAX_N_PERSONS; i++){
     if (lift->persons_to_enter[floor][i].id != NO_ID){
       return i;//lift->persons_to_enter[floor][i].id;
@@ -225,47 +225,12 @@ void lift_has_arrived(lift_type lift)
 
 /* --- functions related to person task START --- */
 
-/* passenger_wait_for_lift: returns non-zero if the passenger shall
-   wait for the lift, otherwise returns zero */
-static int passenger_wait_for_lift(lift_type lift, int wait_floor)
-{
-  //  printf("Moving: %d\t floor: %d\t wait_floor: %d\t pass: %d\n", lift->moving,lift->floor,wait_floor,n_passengers_in_lift(lift));
-  // if(!lift->moving){
-  //    printf("#################################################################\n");
-  //
-  //  }
-    int waiting_ready =
-        /* the lift is not moving */ 
-        //!lift->moving && 
-        /* and the lift is at wait_floor */ 
-        lift->floor == wait_floor && 
-        /* and the lift is not full */ 
-        n_passengers_in_lift(lift) < MAX_N_PASSENGERS; 
-    return !waiting_ready;
-}
-
-/* passenger_wait_for_target: returns non-zero if the passenger shall
-   wait for the exit floor, otherwise returns zero */
-static int passenger_wait_for_exit(lift_type lift, int target_floor)
-{
-    int waiting_ready =
-      /* the lift is not moving */ 
-      //!lift->moving && 
-      /* and the lift is at wait_floor */ 
-      lift->floor == target_floor;
-    return !waiting_ready;
-
-}
-
-
-
-
 /* enter_floor: makes a person with id id stand at floor floor */ 
 void enter_floor(
     lift_type lift, int id, int from_floor, int to_floor)
 {
     int i; 
-    int floor_index; 
+    int floor_index = -1; 
     int found; 
 
     /* stand at floor */ 
@@ -296,7 +261,7 @@ void leave_floor(lift_type lift, int id, int enter_floor/*, int *to_floor*/)
 /* fig_end lift_c_prot */ 
 {
   int i; 
-  int floor_index; 
+  int floor_index = -1; 
   int found; 
 
   /* leave the floor */
