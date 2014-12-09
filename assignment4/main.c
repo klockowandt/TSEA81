@@ -8,23 +8,20 @@
 #include <sys/time.h>
 #include <termios.h>
 #include "lift.h"
-#include "si_ui.h"
 #include "messages.h"
 
-#include "draw.h"
 
 #define PORT_UI 0
 #define PORT_LIFT 1
 #define PORT_FIRSTPERSON 10
 #define N_ITERATIONS 100
-#define N_DESTINATIONS 256
-
+//#define N_DESTINATIONS 256
+#define LENGTH 1024
 
 // These variables keeps track of the process IDs of all processes
 // involved in the application so that they can be killed when the
 // exit command is received.
 static pid_t lift_pid;
-static pid_t uidraw_pid;
 static pid_t liftmove_pid;
 static pid_t person_pid[MAX_N_PERSONS];
 
@@ -64,10 +61,8 @@ static void liftmove_process(void)
 {
 	struct lift_msg* m = malloc(sizeof(struct lift_msg));
 	while(1){
-		// TODO:
-		//    Sleep 2 seconds
-                //    Send a message to the lift process to move the lift.
-	  sleep(1);
+	  // TODO:
+	  //    Send a message to the lift process to move the lift.
 	  m->type = LIFT_MOVE;
 	  int size = sizeof(*m); // Ska vara en * här!
 	  //printf("size1: %lu, size2: %lu, hela:%lu\n", sizeof(m), sizeof(*m), sizeof(struct lift_msg));
@@ -82,18 +77,17 @@ static void lift_process(void)
 	Lift = lift_create();
 	int change_direction, next_floor;
 	
-	char msgbuf[4096];
+	char msgbuf[LENGTH];
 	while(1){
 		int i;
 		struct lift_msg reply;
 		struct lift_msg *m;
-		message_send((char *) Lift, sizeof(*Lift), PORT_UI,0); // Draw the lift
-		int len = message_receive(msgbuf, 4096, PORT_LIFT); // Wait for a message
+
+		int len = message_receive(msgbuf, LENGTH, PORT_LIFT); // Wait for a message
 		if(len < sizeof(struct lift_msg)){
 			fprintf(stderr, "Message too short\n");
 			continue;
 		}
-		
 		m = (struct lift_msg *) msgbuf;
 		switch(m->type){
 		case LIFT_MOVE:
@@ -160,7 +154,7 @@ static void lift_process(void)
 static void person_process(int id)
 {
 	init_random();
-	char buf[4096];
+	char buf[LENGTH];
 	struct lift_msg* m = malloc(sizeof(struct lift_msg));
 	char to;//[N_DESTINATIONS];
 	char from;//[N_DESTINATIONS];
@@ -174,7 +168,7 @@ static void person_process(int id)
 	struct timeval endtime;
 	long long int timediff;
 	gettimeofday(&starttime, NULL);
-	
+	printf("Person %d starts\n", id);
 	for(i = 0; i < N_ITERATIONS; i++){
 	  // TODO:
 	  //    Generate a to and from floor
@@ -207,17 +201,8 @@ static void person_process(int id)
 	  */
 	  
 	  // Wait for a message
-	  int len;
-	  
-	  do{
-	    len = message_receive(buf, 4096, PORT_FIRSTPERSON+id);
-	    m = (struct lift_msg *) buf;
-	    //printf("ID: %d, from: %d, to: %d, Type: %d\n",m->person_id, m->from_floor, m->to_floor, m->type);
-	  }while(m->person_id != id);
-	  //printf("Åkt klart!\n");
-	  // * Wait a little while
-	  //sleep(2);
-	  //printf("Tillbaka i byggnad\n");
+	  message_receive(buf, LENGTH, PORT_FIRSTPERSON+id);
+
 	}
 
 	gettimeofday(&endtime, NULL);
@@ -227,100 +212,29 @@ static void person_process(int id)
 
 }
 
-// This is the final process called by main()
-// It is responsible for:
-//   * Receiving and executing commands from the java GUI
-//   * Killing off all processes when exiting the application
-/*
-void uicommand_process(void)
-{
-	int i;
-	int current_person_id = 0;
-	char message[SI_UI_MAX_MESSAGE_SIZE]; 
-	while(1){
-		// Read a message from the GUI
-		si_ui_receive(message);
-		if(!strcmp(message, "new")){
-			// TODO:
-			// * Check that we don't create too many persons
-			// * fork and create a new person process (and
-			//   record the new pid in person_pid[])
-		  if(current_person_id < MAX_N_PERSONS){
-		    // Create a new person
-		    
-		    pid_t p_pid = fork();
-		    if(!p_pid) {
-		      //printf("################Skapar person process\n");
-		      person_process(current_person_id);
-		    }
-		    person_pid[current_person_id] = p_pid;
-		    current_person_id++;
-                  }else{
-                    si_ui_show_error("Can't create more persons at the moment");
-                  }
-
-		  
-		}else if(!strcmp(message, "exit")){
-			// The code below sends the SIGINT signal to
-			// all processes involved in this application
-			// except for the uicommand process itself
-			// (which is exited by calling exit())
-			kill(uidraw_pid, SIGINT);
-			kill(lift_pid, SIGINT);
-			kill(liftmove_pid, SIGINT);
-			for(i=0; i < MAX_N_PERSONS; i++){
-				if(person_pid[i] > 0){
-					kill(person_pid[i], SIGINT);
-				}
-			}
-			exit(0);
-		}
-	}
-}
-*/
-// This process is responsible for drawing the lift. Receives lift_type structures
-// as messages.
-void uidraw_process(void)
-{
-	char msg[1024];
-	si_ui_set_size(670, 700); 
-	while(1){
-		message_receive(msg, 1024, PORT_UI);
-		lift_type Lift = (lift_type) &msg[0];
-		draw_lift(Lift);
-	}
-}
-
 int main(int argc, char **argv)
 {
 	message_init();
-        si_ui_init(); // Initialize user interface. (Must be done
-		      // here!)
 
 	lift_pid = fork();
 	if(!lift_pid) {
 	  lift_process(/*NULL*/);
 	}
-	uidraw_pid = fork();
-	if(!uidraw_pid){
-		uidraw_process();
-	}
 	liftmove_pid = fork();
 	if(!liftmove_pid){
 		liftmove_process();
 	}
-	//uicommand_process();
 	
 	int i;
 	for(i = 0; i < MAX_N_PERSONS; i++){
 	  pid_t p_pid = fork();
 	  if(!p_pid) {
-	    //printf("################Skapar person process\n");
+	    printf("################Skapar person process %d\n",i);
 	    person_process(i);
+	    exit(0);
 	  }
 	  person_pid[i] = p_pid;
 	}
-	
 	
 	
 	
@@ -330,7 +244,6 @@ int main(int argc, char **argv)
 	// all processes involved in this application
 	// except for the uicommand process itself
 	// (which is exited by calling exit())
-	kill(uidraw_pid, SIGINT);
 	kill(lift_pid, SIGINT);
 	kill(liftmove_pid, SIGINT);
 	for(i=0; i < MAX_N_PERSONS; i++){

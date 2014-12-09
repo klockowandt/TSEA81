@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "si_ui.h"
-
 /* panic function, to be called when fatal errors occur */ 
 static void lift_panic(const char message[])
 {
