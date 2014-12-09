@@ -113,7 +113,7 @@ void lift_next_floor(lift_type lift, int *next_floor, int *change_direction)
     }
   
   */
-
+  *next_floor = lift->floor;
   if(lift->up)
     (*next_floor)++;
   else
