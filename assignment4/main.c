@@ -14,7 +14,7 @@
 #define PORT_UI 0
 #define PORT_LIFT 1
 #define PORT_FIRSTPERSON 10
-#define N_ITERATIONS 100
+#define N_ITERATIONS 10000
 //#define N_DESTINATIONS 256
 #define LENGTH 1024
 
@@ -199,7 +199,8 @@ static void person_process(int id)
 
 	gettimeofday(&endtime, NULL);
 	timediff = (endtime.tv_sec*1000000ULL + endtime.tv_usec) - (starttime.tv_sec*1000000ULL + starttime.tv_usec);
-	printf("Person %d took %lldms\n", id, timediff);
+	//printf("Person %d took %lldms\n", id, timediff);
+	printf("%lld\n", timediff);
 
 
 }
