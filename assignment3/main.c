@@ -9,7 +9,7 @@
 #include "debug.h"
 //#include "si_ui.h"
 
-#define N_ITERATIONS 10000
+#define N_ITERATIONS 1000
 
 
 
@@ -99,7 +99,7 @@ static void *passenger_thread(void *idptr)
 	
 	gettimeofday(&endtime, NULL);
 	timediff = (endtime.tv_sec*1000000ULL + endtime.tv_usec) - (starttime.tv_sec*1000000ULL + starttime.tv_usec);
-	printf("Time for person %d: %lld\n", id, timediff);
+	printf("%lld\n",timediff);
 	
 	return NULL;
 }
