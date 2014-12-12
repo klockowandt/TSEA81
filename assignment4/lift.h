@@ -16,10 +16,12 @@
 /* data structure for person information */ 
 typedef struct
 {
-    /* identity */ 
-    int id; 
-    /* destination floor */ 
-    int to_floor; 
+  /* identity */ 
+  int id; 
+  /* destination floor */ 
+  long int to_floor; 
+  long int from_floor;
+  char iterations;
 } person_data_type; 
 /* fig_end person_data_type */ 
 
@@ -93,7 +95,7 @@ char enter_lift(lift_type lift, int id, int to_floor);
 /* leave_lift: makes a person, standing inside the lift and having 
    destination floor equal to floor, leave the lift. The id of the 
    person is returned in the parameter *id */ 
-void leave_lift(lift_type lift, int floor, int lift_index); 
+void leave_lift(lift_type lift, int lift_index); 
 
 
 /* next_passenger_to_enter: returns the index of the next passenger at this floor, 

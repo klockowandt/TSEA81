@@ -290,7 +290,7 @@ void leave_floor(lift_type lift, int id, int enter_floor/*, int *to_floor*/)
 
 
 /* leave_lift: makes a person with id id at lift_index leave the lift */ 
-void leave_lift(lift_type lift, int id, int lift_index)
+void leave_lift(lift_type lift, int lift_index)
 {
       lift->passengers_in_lift[lift_index].id = NO_ID;
       lift->passengers_in_lift[lift_index].to_floor = NO_FLOOR;  
