@@ -69,7 +69,15 @@ lift_type lift_create(void)
 
     /* initialise mutex and event variable */
     pthread_mutex_init(&lift->mutex,NULL);
-    pthread_cond_init(&lift->change,NULL);
+    //pthread_cond_init(&lift->change,NULL);
+    pthread_cond_init(&lift->floor_0, NULL);
+    pthread_cond_init(&lift->floor_1, NULL);
+    pthread_cond_init(&lift->floor_2, NULL);
+    pthread_cond_init(&lift->floor_3, NULL);
+    pthread_cond_init(&lift->floor_4, NULL);
+    
+    pthread_cond_init(&lift->moved_to_new_floor, NULL);
+    pthread_cond_init(&lift->lift_entered_or_exited, NULL);
 
     return lift;
 }
@@ -214,20 +222,21 @@ char everyone_has_jumped_on(lift_type lift){
 void lift_has_arrived(lift_type lift)
 {
   //printf("Lift arrived\n");
-  pthread_cond_broadcast(&lift->change);
+  pthread_cond_broadcast(&lift->moved_to_new_floor);
   
   
   // Lock lift 
   pthread_mutex_lock(&lift->mutex);
-  
   // Kontrollera så att alla hinner hoppa på och/eller av som vill göra det på denna våning
   while(!everyone_has_jumped_off(lift)){
-    //printf("Wait for off\n");
-    pthread_cond_wait(&lift->change, &lift->mutex);
+    printf("Wait for off\n");
+    pthread_cond_wait(&lift->lift_entered_or_exited, &lift->mutex);
   }  
   while(!everyone_has_jumped_on(lift)){
-    //printf("Wait for on\n");
-    pthread_cond_wait(&lift->change, &lift->mutex);
+    printf("Wait for on\n");
+    pthread_cond_wait(&lift->lift_entered_or_exited, &lift->mutex);//@TODO: Här fastnar den!!!
+    printf("waiting for lock in lift has arrived\n");
+
   }
 
   // release lift
@@ -380,26 +389,27 @@ void lift_travel(lift_type lift, int id, int from_floor, int to_floor)
   while(passenger_wait_for_lift(lift, from_floor)){
     //printf("%d: Wait for lift to jump on %d\n",id,from_floor);
     //draw_lift(lift); 
-    pthread_cond_wait(&lift->change, &lift->mutex);
+    pthread_cond_wait(&lift->moved_to_new_floor, &lift->mutex);
   }
   
   // Jumps on the lift
   int index = enter_lift(lift, id, to_floor);
   if (index != -1){
-    //printf("%d hoppa pa hiss!\n",id);
+    printf("%d hoppa pa hiss!\n",id);
     leave_floor(lift, id, from_floor);
   }
-  pthread_cond_broadcast(&lift->change);
+  pthread_cond_broadcast(&lift->lift_entered_or_exited);
   
   // Waits until the lift is at the to_floor
   //conditional_wait(passenger_wait_for_exit(lift, to_floor));
   while(passenger_wait_for_exit(lift, to_floor)){
-    //printf("%d: Wait for floor to jump off at %d\n",id,to_floor);
-    pthread_cond_wait(&lift->change, &lift->mutex);
+    printf("%d: Wait for floor to jump off at %d\n",id,to_floor);
+    pthread_cond_wait(&lift->moved_to_new_floor, &lift->mutex);
   }
-  //printf("%d hoppa av hiss!\n",id);
+  printf("%d hoppa av hiss!\n",id);
   leave_lift(lift,id,index);
-  pthread_cond_broadcast(&lift->change);
+  printf("Before broadcast\n");
+  pthread_cond_broadcast(&lift->lift_entered_or_exited);
   
 
   pthread_mutex_unlock(&lift->mutex); 
