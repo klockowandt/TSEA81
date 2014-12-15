@@ -6,20 +6,27 @@
 #define N_FLOORS 5
 
 /* maximum number of persons in the lift system */ 
-#define MAX_N_PERSONS 10
+#define MAX_N_PERSONS 40
 
 /* maximum number of passengers in lift */ 
 #define MAX_N_PASSENGERS 5
+
+#define N_DEST 1
+
+
+
 /* fig_end lift_h_defs */ 
 
 /* fig_begin person_data_type */ 
 /* data structure for person information */ 
 typedef struct
 {
-    /* identity */ 
-    int id; 
-    /* destination floor */ 
-    int to_floor; 
+  /* identity */ 
+  int id; 
+  /* destination floor */ 
+  unsigned char to_floor[N_DEST]; 
+  unsigned char from_floor[N_DEST];
+  unsigned char trips;
 } person_data_type; 
 /* fig_end person_data_type */ 
 
@@ -78,7 +85,7 @@ int get_current_floor(lift_type lift);
 
 /* enter_floor: makes the person with id id and destination to_floor stand 
    at floor floor */ 
-void enter_floor(lift_type lift, int id, int floor, int to_floor); 
+void enter_floor(lift_type lift, unsigned char id, unsigned char floor[], unsigned char to_floor[], unsigned char trip); 
 
 /* leave_floor: makes a person, standing at floor floor, leave the  
    floor. The id and destination of the person are returned in the 
@@ -87,13 +94,12 @@ void leave_floor(lift_type lift, int floor, int /***/id/*, int *to_floor*/);
 
 /* enter_lift: makes the person with id id and destination to_floor 
    enter the lift */ 
-char enter_lift(lift_type lift, int id, int to_floor); 
-
+char enter_lift(lift_type lift, person_data_type passenger);
 
 /* leave_lift: makes a person, standing inside the lift and having 
    destination floor equal to floor, leave the lift. The id of the 
    person is returned in the parameter *id */ 
-void leave_lift(lift_type lift, int floor, int lift_index); 
+void leave_lift(lift_type lift, int lift_index); 
 
 
 /* next_passenger_to_enter: returns the index of the next passenger at this floor, 

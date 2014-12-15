@@ -1,0 +1,14 @@
+long int är 8 bytes
+int är 4 bytes
+
+xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx
+
+
+Finns 5 våningar: 0, 1, 2, 3, 4
+Ska kunna lagra både 5 till och 5 från: 25 värden, 5 bits
+
+(0000, 0001, 0010, 0011, 0100, 
+ 0101, 0110, 0111, 1000, 1001)
+
+Kan lagra 12st 5 bits-sektioner :) 
+

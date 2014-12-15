@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+
 
 /* panic function, to be called when fatal errors occur */ 
 static void lift_panic(const char message[])
@@ -27,8 +29,9 @@ lift_type lift_create(void)
     int floor; 
 
     /* loop counter */
-    int i;
+    int i,j;
 
+    
     /* allocate memory */
     lift = (lift_type) malloc(sizeof(lift_data_type));
 
@@ -49,7 +52,11 @@ lift_type lift_create(void)
         for (i = 0; i < MAX_N_PERSONS; i++)
         {
             lift->persons_to_enter[floor][i].id = NO_ID; 
-            lift->persons_to_enter[floor][i].to_floor = NO_FLOOR; 
+            lift->persons_to_enter[floor][i].trips = 0; 
+	    for(j = 0; j < N_DEST; j++){
+	      lift->persons_to_enter[floor][i].to_floor[j] = NO_FLOOR; 
+	      lift->persons_to_enter[floor][i].from_floor[j] = NO_FLOOR; 
+	    }
         }
     }
 
@@ -57,7 +64,11 @@ lift_type lift_create(void)
     for (i = 0; i < MAX_N_PASSENGERS; i++) 
     {
         lift->passengers_in_lift[i].id = NO_ID; 
-        lift->passengers_in_lift[i].to_floor = NO_FLOOR; 
+        lift->passengers_in_lift[i].trips = 0; 
+	for(j = 0; j < N_DEST; j++){
+	  lift->passengers_in_lift[i].to_floor[j] = NO_FLOOR; 
+	  lift->passengers_in_lift[i].from_floor[j] = NO_FLOOR; 
+	}
     }
 
 
@@ -81,28 +92,7 @@ void lift_delete(lift_type lift)
    shall be changed */
 void lift_next_floor(lift_type lift, int *next_floor, int *change_direction)
 {
-  // Skulle gärna ha nån form av tidsstämpel på när de steg på / tröck på knappen.
-  // Nu prioriterar de passagerare som står i hissen, och tar sen och åker till de som står utanför. 
-  // Men skulle hissen passera en person och det finns rum i hissen får hen såklart stiga på!
-  
-  // Move to the nearest target level among the persons in the lift
-  /*  int nearest = 100;
-  int candidate = -1;
-  for (i = 0; i < MAX_N_PASSENGERS; i++) 
-    {
-      if(lift->passengers_in_lift[i].to_floor != NO_FLOOR && 
-	 ABS(lift->passengers_in_lift[i].to_floor - lift->floor) < nearest)
-	  {
-	    nearest = ABS(lift->passengers_in_lift[i].to_floor - lift->floor);
-	    candidate = lift->passengers_in_lift[i].to_floor;
-	  }
-    }
-  if(candidate == -1)
-    {
-      
-    }
-  
-  */
+
   *next_floor = lift->floor;
   
   if(lift->up)
@@ -149,8 +139,9 @@ static int n_passengers_in_lift(lift_type lift)
 int next_passenger_to_leave(lift_type lift, int floor){
   int i;
   for (i = 0; i < MAX_N_PASSENGERS; i++){
-    if (lift->passengers_in_lift[i].to_floor == floor){
-      return i;//lift->passengers_in_lift[i].id;
+    //printf("Person %d trip: %d\n",lift->passengers_in_lift[i].id,lift->passengers_in_lift[i].trips);
+    if (lift->passengers_in_lift[i].id != NO_ID && lift->passengers_in_lift[i].to_floor[lift->passengers_in_lift[i].trips] == floor){
+      return i;
     }
   }
   return -1;
@@ -180,7 +171,7 @@ char lift_is_full(lift_type lift){
 char everyone_has_jumped_off(lift_type lift){
   int i;
   for(i = 0; i < MAX_N_PASSENGERS; i++)
-    if(lift->passengers_in_lift[i].to_floor == lift->floor)
+    if(lift->passengers_in_lift[i].to_floor[lift->passengers_in_lift[i].trips] == lift->floor)
       return 0;
   return 1;
 }
@@ -226,8 +217,7 @@ void lift_has_arrived(lift_type lift)
 /* --- functions related to person task START --- */
 
 /* enter_floor: makes a person with id id stand at floor floor */ 
-void enter_floor(
-    lift_type lift, int id, int from_floor, int to_floor)
+void enter_floor(lift_type lift, unsigned char id, unsigned char from_floor[N_DEST], unsigned char to_floor[N_DEST], unsigned char trip)
 {
     int i; 
     int floor_index = -1; 
@@ -237,7 +227,7 @@ void enter_floor(
     found = 0; 
     for (i = 0; i < MAX_N_PERSONS && !found; i++)
     {
-        if (lift->persons_to_enter[from_floor][i].id == NO_ID)
+        if (lift->persons_to_enter[from_floor[trip]][i].id == NO_ID)
         {
             found = 1; 
             floor_index = i; 
@@ -250,9 +240,14 @@ void enter_floor(
     }
 
     /* enter floor at index floor_index */ 
-    lift->persons_to_enter[from_floor][floor_index].id = id;
-    lift->persons_to_enter[from_floor][floor_index].to_floor = to_floor; 
+    lift->persons_to_enter[from_floor[trip]][floor_index].id = id;
+    lift->persons_to_enter[from_floor[trip]][floor_index].trips = trip;
+    memcpy(lift->persons_to_enter[from_floor[trip]][floor_index].to_floor, to_floor, N_DEST); 
+    memcpy(lift->persons_to_enter[from_floor[trip]][floor_index].from_floor, from_floor, N_DEST); 
 }
+
+
+
 
 /* leave_floor: makes a person with id id at enter_floor leave 
    enter_floor */ 
@@ -282,7 +277,7 @@ void leave_floor(lift_type lift, int id, int enter_floor/*, int *to_floor*/)
 
   /* leave floor at index floor_index */ 
   lift->persons_to_enter[enter_floor][floor_index].id = NO_ID; 
-  lift->persons_to_enter[enter_floor][floor_index].to_floor = NO_FLOOR; 
+  //lift->persons_to_enter[enter_floor][floor_index].to_floor = NO_FLOOR; 
 }
 
 
@@ -290,21 +285,20 @@ void leave_floor(lift_type lift, int id, int enter_floor/*, int *to_floor*/)
 
 
 /* leave_lift: makes a person with id id at lift_index leave the lift */ 
-void leave_lift(lift_type lift, int id, int lift_index)
+void leave_lift(lift_type lift, int lift_index)
 {
       lift->passengers_in_lift[lift_index].id = NO_ID;
-      lift->passengers_in_lift[lift_index].to_floor = NO_FLOOR;  
+      //lift->passengers_in_lift[lift_index].to_floor = NO_FLOOR;  
 }
 
 // Returns the index of the person if the person can jump on the lift (ie. the lift had space left), otherwise -1
-char enter_lift(lift_type lift, int id, int to_floor){
+char enter_lift(lift_type lift, person_data_type passenger){
   int i;
 
   // NOTE: DONT COUNT PERSONS THAT SHOULD GO OFF AT THIS FLOOR!!
   for(i = 0; i < MAX_N_PASSENGERS; i++){
     if(lift->passengers_in_lift[i].id == NO_ID){
-      lift->passengers_in_lift[i].id = id;
-      lift->passengers_in_lift[i].to_floor = to_floor;
+      lift->passengers_in_lift[i] = passenger;
       return i;
     }
   }
