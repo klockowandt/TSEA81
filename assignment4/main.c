@@ -14,7 +14,7 @@
 #define PORT_UI 0
 #define PORT_LIFT 1
 #define PORT_FIRSTPERSON 10
-#define N_ITERATIONS 10000
+#define N_ITERATIONS 10000/25
 #define LENGTH 4096
 
 // These variables keeps track of the process IDs of all processes
@@ -101,25 +101,29 @@ static void lift_process(void)
 		  while((passenger_index = next_passenger_to_leave(Lift, Lift->floor)) != -1){
 		    passenger = Lift->passengers_in_lift[passenger_index];
 		    
-		    //printf("%d hoppa av hiss!\n",passenger_id);
+		    //printf("%d hoppa AV hiss at %d!\n",passenger.id, Lift->floor);
+
 		    leave_lift(Lift, passenger_index);
-		    
-		    
-		    
-		    
+		    		    		    
 		    // Om vi rest alla planerade rutter sa ska personen fa ta over och gora nya beslut
 		    if(passenger.trips <= 0){
+		      //printf("%d: Travel done??\n", passenger.id);
 		      m->type = LIFT_TRAVEL_DONE;
 		      message_send((char*)m, sizeof(*m), PORT_FIRSTPERSON + passenger.id, 0);
+		    }else{
+		      passenger.trips--;
+		      //printf("Person %d enters floor %d for trip %d\n",passenger.id, passenger.from_floor[passenger.trips], passenger.trips);
+		      enter_floor(Lift,passenger.id, passenger.from_floor,passenger.to_floor, passenger.trips);
 		    }
-		    passenger.trips--;
+		    
+		    
 		  }
 		  
 		  while((passenger_index = next_passenger_to_enter(Lift,Lift->floor)) != -1){
 		    passenger = Lift->persons_to_enter[Lift->floor][passenger_index];
 		    
 		    // Jumps on the lift
-		    //printf("%d hoppa pa hiss!\n",passenger_id);
+		    //printf("%d hoppa PA hiss at %d!\n", passenger.id, Lift->floor);
 		    enter_lift(Lift, passenger);
 		    leave_floor(Lift, passenger.id, Lift->floor);
 		    
@@ -133,15 +137,15 @@ static void lift_process(void)
 		  lift_next_floor(Lift, &next_floor, &change_direction);
 		  //printf("Floor: %d, Direction: %d",next_floor, change_direction);
 		  lift_move(Lift, next_floor, change_direction);
-
+		  
 		  break;
 		case LIFT_TRAVEL:
 		  // TODO:
 		  //    Update the Lift structure so that the person with the given ID  is now present on the floor
 		  // Create the person at the enter_floor
-		  
+		  //printf("Create person %d with trip %d\n", m->person_id, N_DEST);
+		  //printf("##Person %d enters floor %d for trip %d\n",m->person_id, m->from_floor[N_DEST-1], N_DEST-1);
 		  enter_floor(Lift, m->person_id, m->from_floor, m->to_floor, N_DEST-1);
-		  
 		  break;
 		case LIFT_TRAVEL_DONE:
 		  break;
@@ -179,16 +183,17 @@ static void person_process(int id)
 	  m->type = LIFT_TRAVEL;
 	  m->person_id = id;
 	  int i;
+	  //printf("Person %d: ",id);
 	  for(i = 0; i < N_DEST; i++){
 	    to = get_random_value(id, N_FLOORS-1);
 	    while((from = get_random_value(id, N_FLOORS-1)) == to);
 	    // * Travel between these floors
-	    
+	    //printf("%d=>%d\t",from,to);
 	    m->from_floor[i] = from;
 	    m->to_floor[i] = to;
-	  }
+	  }//printf("\n");
 	  
-	  //printf("Skickar LIFT_TRAVEL\n");
+	  //printf("%d: Skickar LIFT_TRAVEL\n",id);
 	  message_send((char*)m,sizeof(*m),PORT_LIFT,0);
 	  	  
 	  // Wait for a message
@@ -209,7 +214,6 @@ static void person_process(int id)
 int main(int argc, char **argv)
 {
 	message_init();
-
 	lift_pid = fork();
 	if(!lift_pid) {
 	  lift_process(/*NULL*/);

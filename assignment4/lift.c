@@ -139,8 +139,9 @@ static int n_passengers_in_lift(lift_type lift)
 int next_passenger_to_leave(lift_type lift, int floor){
   int i;
   for (i = 0; i < MAX_N_PASSENGERS; i++){
-    if (lift->passengers_in_lift[i].to_floor[lift->passengers_in_lift[i].trips] == floor){
-      return i;//lift->passengers_in_lift[i].id;
+    //printf("Person %d trip: %d\n",lift->passengers_in_lift[i].id,lift->passengers_in_lift[i].trips);
+    if (lift->passengers_in_lift[i].id != NO_ID && lift->passengers_in_lift[i].to_floor[lift->passengers_in_lift[i].trips] == floor){
+      return i;
     }
   }
   return -1;
@@ -242,9 +243,14 @@ void enter_floor(lift_type lift, unsigned char id, unsigned char from_floor[N_DE
     lift->persons_to_enter[from_floor[trip]][floor_index].id = id;
     lift->persons_to_enter[from_floor[trip]][floor_index].trips = trip;
     memcpy(lift->persons_to_enter[from_floor[trip]][floor_index].to_floor, to_floor, N_DEST); 
-    memcpy(lift->persons_to_enter[from_floor[trip]][floor_index].from_floor, from_floor, N_DEST);
-    
+    memcpy(lift->persons_to_enter[from_floor[trip]][floor_index].from_floor, from_floor, N_DEST); 
 }
+
+void setup_person(unsigned char id, unsigned char floor[], unsigned char to_floor[], unsigned char trip){
+  return;
+}
+
+
 
 /* leave_floor: makes a person with id id at enter_floor leave 
    enter_floor */ 
