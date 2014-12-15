@@ -246,9 +246,6 @@ void enter_floor(lift_type lift, unsigned char id, unsigned char from_floor[N_DE
     memcpy(lift->persons_to_enter[from_floor[trip]][floor_index].from_floor, from_floor, N_DEST); 
 }
 
-void setup_person(unsigned char id, unsigned char floor[], unsigned char to_floor[], unsigned char trip){
-  return;
-}
 
 
 
