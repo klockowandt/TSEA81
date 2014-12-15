@@ -14,9 +14,9 @@
 #define PORT_UI 0
 #define PORT_LIFT 1
 #define PORT_FIRSTPERSON 10
-#define N_ITERATIONS 10000/25
+#define N_ITERATIONS 10000/N_DEST
 #define LENGTH 4096
-
+//static int counter;
 // These variables keeps track of the process IDs of all processes
 // involved in the application so that they can be killed when the
 // exit command is received.
@@ -104,10 +104,11 @@ static void lift_process(void)
 		    //printf("%d hoppa AV hiss at %d!\n",passenger.id, Lift->floor);
 
 		    leave_lift(Lift, passenger_index);
-		    		    		    
+		    //		    counter++;
 		    // Om vi rest alla planerade rutter sa ska personen fa ta over och gora nya beslut
 		    if(passenger.trips <= 0){
 		      //printf("%d: Travel done??\n", passenger.id);
+		      //printf("%d: %d\n",passenger.id,counter);
 		      m->type = LIFT_TRAVEL_DONE;
 		      message_send((char*)m, sizeof(*m), PORT_FIRSTPERSON + passenger.id, 0);
 		    }else{
@@ -213,6 +214,7 @@ static void person_process(int id)
 
 int main(int argc, char **argv)
 {
+  //counter=0;
 	message_init();
 	lift_pid = fork();
 	if(!lift_pid) {
