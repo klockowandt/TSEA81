@@ -4,14 +4,14 @@
 #include <pthread.h>
 
 /* drawing module */ 
-//#include "draw.h"
+#include "draw.h"
 
 /* standard includes */ 
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 
-//#include "si_ui.h"
+#include "si_ui.h"
 
 /* panic function, to be called when fatal errors occur */ 
 static void lift_panic(const char message[])
@@ -148,7 +148,7 @@ void lift_move(lift_type lift, int next_floor, int change_direction)
     pthread_mutex_unlock(&lift->mutex); 
         
     /* it takes two seconds to move to the next floor */ 
-    //usleep(500000);
+    usleep(500000);
         
     /* reserve lift */ 
     pthread_mutex_lock(&lift->mutex); 
@@ -166,7 +166,7 @@ void lift_move(lift_type lift, int next_floor, int change_direction)
     }
     
     /* draw, since a change has occurred */ 
-    //draw_lift(lift); 
+    draw_lift(lift); 
     
     /* release lift */ 
     pthread_mutex_unlock(&lift->mutex); 
@@ -388,7 +388,7 @@ void lift_travel(lift_type lift, int id, int from_floor, int to_floor)
   //conditional_wait(passenger_wait_for_lift(lift, from_floor));
   while(passenger_wait_for_lift(lift, from_floor)){
     //printf("%d: Wait for lift to jump on %d\n",id,from_floor);
-    //draw_lift(lift); 
+    draw_lift(lift); 
     pthread_cond_wait(&lift->moved_to_new_floor, &lift->mutex);
   }
   
