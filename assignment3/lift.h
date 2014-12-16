@@ -60,9 +60,6 @@ typedef struct
     pthread_cond_t floor_2;
     pthread_cond_t floor_3;
     pthread_cond_t floor_4;
-    pthread_cond_t moved_to_new_floor;
-    pthread_cond_t lift_entered_or_exited;
- 
 
 } lift_data_type;
 

@@ -7,9 +7,9 @@
 #include <sys/time.h>
 #include "lift.h"
 #include "debug.h"
-#include "si_ui.h"
+//#include "si_ui.h"
 
-#define N_ITERATIONS 10
+#define N_ITERATIONS 10000
 
 
 
@@ -59,7 +59,7 @@ static void init_random(void)
 
 static void *lift_thread(void *unused)
 {
-  printf("Started lift_thread\n");
+  //printf("Started lift_thread\n");
   //The functions lift_next_floor, lift_move and lift_has_arrived shall be called by the lift thread
 	while(1){
 	  int next_floor, change_direction;
@@ -73,7 +73,7 @@ static void *lift_thread(void *unused)
 
 static void *passenger_thread(void *idptr)
 {
-        printf("Person skapad\n");
+  //printf("Person skapad\n");
   // Code that reads the passenger ID from the idptr pointer
 	// (due to the way pthread_create works we need to first cast
 	// the void pointer to an int pointer).
@@ -96,7 +96,7 @@ static void *passenger_thread(void *idptr)
 	  // * Travel between these floors
 	  lift_travel(Lift, id, from, to);
 	  // * Wait a little while
-	  sleep(1);
+	  //sleep(1);
 	}
 	
 	gettimeofday(&endtime, NULL);
@@ -105,7 +105,7 @@ static void *passenger_thread(void *idptr)
 	
 	return NULL;
 }
-
+/*
 static void *user_thread(void *unused)
 {
 	int current_passenger_id = 0;
@@ -143,28 +143,25 @@ static void *user_thread(void *unused)
 	}
 	return NULL;
 }
-
+*/
 
 int main(int argc, char **argv)
 {
   
-        si_ui_init();
+  //si_ui_init();
 	debug_init();
 	init_random();
 	Lift = lift_create();
 	sem_init(&mutex,0,0);
         // Create tasks as appropriate here
 	/* create tasks */ 
-	pthread_t user_thread_handle;
+	//pthread_t user_thread_handle;
 	pthread_t lift_thread_handle;
-	printf("Hej!\n");
-	pthread_create(&user_thread_handle, NULL, user_thread, 0);
+	//pthread_create(&user_thread_handle, NULL, user_thread, 0);
 	pthread_create(&lift_thread_handle, NULL, lift_thread, 0);
-	printf("Hejdå\n");
 	int i;
 	for(i = 0; i < MAX_N_PERSONS; i++){
 	  pthread_t handle;
-	  printf("Katt!\n");
 	  pthread_create(&handle, NULL, passenger_thread, (void*) &i);
 	  
 	  sem_wait(&mutex);
@@ -173,7 +170,7 @@ int main(int argc, char **argv)
 	
 	
 	pthread_join(lift_thread_handle, NULL);
-	pthread_join(user_thread_handle, NULL);
+	//pthread_join(user_thread_handle, NULL);
 	
 	
 	return 0;

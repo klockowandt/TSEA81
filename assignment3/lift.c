@@ -4,14 +4,14 @@
 #include <pthread.h>
 
 /* drawing module */ 
-#include "draw.h"
+//#include "draw.h"
 
 /* standard includes */ 
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#include "si_ui.h"
+//#include "si_ui.h"
 
 /* panic function, to be called when fatal errors occur */ 
 static void lift_panic(const char message[])
@@ -69,15 +69,11 @@ lift_type lift_create(void)
 
     /* initialise mutex and event variable */
     pthread_mutex_init(&lift->mutex,NULL);
-    //pthread_cond_init(&lift->change,NULL);
     pthread_cond_init(&lift->floor_0, NULL);
     pthread_cond_init(&lift->floor_1, NULL);
     pthread_cond_init(&lift->floor_2, NULL);
     pthread_cond_init(&lift->floor_3, NULL);
     pthread_cond_init(&lift->floor_4, NULL);
-    
-    pthread_cond_init(&lift->moved_to_new_floor, NULL);
-    pthread_cond_init(&lift->lift_entered_or_exited, NULL);
 
     return lift;
 }
@@ -148,7 +144,7 @@ void lift_move(lift_type lift, int next_floor, int change_direction)
     pthread_mutex_unlock(&lift->mutex); 
         
     /* it takes two seconds to move to the next floor */ 
-    usleep(500000);
+    //usleep(500000);
         
     /* reserve lift */ 
     pthread_mutex_lock(&lift->mutex); 
@@ -166,7 +162,7 @@ void lift_move(lift_type lift, int next_floor, int change_direction)
     }
     
     /* draw, since a change has occurred */ 
-    draw_lift(lift); 
+    //draw_lift(lift); 
     
     /* release lift */ 
     pthread_mutex_unlock(&lift->mutex); 
@@ -222,20 +218,46 @@ char everyone_has_jumped_on(lift_type lift){
 void lift_has_arrived(lift_type lift)
 {
   //printf("Lift arrived\n");
-  pthread_cond_broadcast(&lift->moved_to_new_floor);
-  
+  if(lift->floor == 0)
+    pthread_cond_broadcast(&lift->floor_0);
+  else if(lift->floor == 1)
+    pthread_cond_broadcast(&lift->floor_1);
+  else if(lift->floor == 2)
+    pthread_cond_broadcast(&lift->floor_2);
+  else if(lift->floor == 3)
+    pthread_cond_broadcast(&lift->floor_3);
+  else if(lift->floor == 4)
+    pthread_cond_broadcast(&lift->floor_4);
   
   // Lock lift 
   pthread_mutex_lock(&lift->mutex);
   // Kontrollera så att alla hinner hoppa på och/eller av som vill göra det på denna våning
   while(!everyone_has_jumped_off(lift)){
-    printf("Wait for off\n");
-    pthread_cond_wait(&lift->lift_entered_or_exited, &lift->mutex);
+    //printf("Wait for off\n");
+    if(lift->floor == 0)
+      pthread_cond_wait(&lift->floor_0, &lift->mutex);
+    else if(lift->floor == 1)
+      pthread_cond_wait(&lift->floor_1, &lift->mutex);
+    else if(lift->floor == 2)
+      pthread_cond_wait(&lift->floor_2, &lift->mutex);
+    else if(lift->floor == 3)
+      pthread_cond_wait(&lift->floor_3, &lift->mutex);
+    else if(lift->floor == 4)
+      pthread_cond_wait(&lift->floor_4, &lift->mutex);
   }  
   while(!everyone_has_jumped_on(lift)){
-    printf("Wait for on\n");
-    pthread_cond_wait(&lift->lift_entered_or_exited, &lift->mutex);//@TODO: Här fastnar den!!!
-    printf("waiting for lock in lift has arrived\n");
+    //printf("Wait for on\n");
+    if(lift->floor == 0)
+      pthread_cond_wait(&lift->floor_0, &lift->mutex);
+    else if(lift->floor == 1)
+      pthread_cond_wait(&lift->floor_1, &lift->mutex);
+    else if(lift->floor == 2)
+      pthread_cond_wait(&lift->floor_2, &lift->mutex);
+    else if(lift->floor == 3)
+      pthread_cond_wait(&lift->floor_3, &lift->mutex);
+    else if(lift->floor == 4)
+      pthread_cond_wait(&lift->floor_4, &lift->mutex);
+    //printf("waiting for lock in lift has arrived %d\n", lift->floor);
 
   }
 
@@ -388,29 +410,64 @@ void lift_travel(lift_type lift, int id, int from_floor, int to_floor)
   //conditional_wait(passenger_wait_for_lift(lift, from_floor));
   while(passenger_wait_for_lift(lift, from_floor)){
     //printf("%d: Wait for lift to jump on %d\n",id,from_floor);
-    draw_lift(lift); 
-    pthread_cond_wait(&lift->moved_to_new_floor, &lift->mutex);
+    //draw_lift(lift); 
+    if(from_floor == 0)
+      pthread_cond_wait(&lift->floor_0, &lift->mutex);
+    else if(from_floor == 1)
+      pthread_cond_wait(&lift->floor_1, &lift->mutex);
+    else if(from_floor == 2)
+      pthread_cond_wait(&lift->floor_2, &lift->mutex);
+    else if(from_floor == 3)
+      pthread_cond_wait(&lift->floor_3, &lift->mutex);
+    else if(from_floor == 4)
+      pthread_cond_wait(&lift->floor_4, &lift->mutex);
   }
   
   // Jumps on the lift
   int index = enter_lift(lift, id, to_floor);
   if (index != -1){
-    printf("%d hoppa pa hiss!\n",id);
+    //printf("%d hoppa pa hiss!\n",id);
     leave_floor(lift, id, from_floor);
   }
-  pthread_cond_broadcast(&lift->lift_entered_or_exited);
-  
+  if(lift->floor == 0)
+    pthread_cond_broadcast(&lift->floor_0);
+  else if(lift->floor == 1)
+    pthread_cond_broadcast(&lift->floor_1);
+  else if(lift->floor == 2)
+    pthread_cond_broadcast(&lift->floor_2);
+  else if(lift->floor == 3)
+    pthread_cond_broadcast(&lift->floor_3);
+  else if(lift->floor == 4)
+    pthread_cond_broadcast(&lift->floor_4);
+
   // Waits until the lift is at the to_floor
   //conditional_wait(passenger_wait_for_exit(lift, to_floor));
   while(passenger_wait_for_exit(lift, to_floor)){
-    printf("%d: Wait for floor to jump off at %d\n",id,to_floor);
-    pthread_cond_wait(&lift->moved_to_new_floor, &lift->mutex);
+    //printf("%d: Wait for floor to jump off at %d\n",id,to_floor);
+    if(to_floor == 0)
+      pthread_cond_wait(&lift->floor_0, &lift->mutex);
+    else if(to_floor == 1)
+      pthread_cond_wait(&lift->floor_1, &lift->mutex);
+    else if(to_floor == 2)
+      pthread_cond_wait(&lift->floor_2, &lift->mutex);
+    else if(to_floor == 3)
+      pthread_cond_wait(&lift->floor_3, &lift->mutex);
+    else if(to_floor == 4)
+      pthread_cond_wait(&lift->floor_4, &lift->mutex);
   }
-  printf("%d hoppa av hiss!\n",id);
+  //printf("%d hoppa av hiss!\n",id);
   leave_lift(lift,id,index);
-  printf("Before broadcast\n");
-  pthread_cond_broadcast(&lift->lift_entered_or_exited);
-  
+  //printf("Before broadcast\n");
+  if(lift->floor == 0)
+    pthread_cond_broadcast(&lift->floor_0);
+  else if(lift->floor == 1)
+    pthread_cond_broadcast(&lift->floor_1);
+  else if(lift->floor == 2)
+    pthread_cond_broadcast(&lift->floor_2);
+  else if(lift->floor == 3)
+    pthread_cond_broadcast(&lift->floor_3);
+  else if(lift->floor == 4)
+    pthread_cond_broadcast(&lift->floor_4);
 
   pthread_mutex_unlock(&lift->mutex); 
 
