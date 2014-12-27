@@ -11,7 +11,7 @@
 /* maximum number of passengers in lift */ 
 #define MAX_N_PASSENGERS 5
 
-#define N_DEST 1
+#define N_DEST 10
 
 
 

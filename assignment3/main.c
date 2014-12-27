@@ -101,7 +101,7 @@ static void *passenger_thread(void *idptr)
 	
 	gettimeofday(&endtime, NULL);
 	timediff = (endtime.tv_sec*1000000ULL + endtime.tv_usec) - (starttime.tv_sec*1000000ULL + starttime.tv_usec);
-	printf("%lld\n",timediff);
+	printf("%d: %lld\n",id,timediff);
 	
 	return NULL;
 }
@@ -159,12 +159,29 @@ int main(int argc, char **argv)
 	pthread_t lift_thread_handle;
 	//pthread_create(&user_thread_handle, NULL, user_thread, 0);
 	pthread_create(&lift_thread_handle, NULL, lift_thread, 0);
+
+		
 	int i;
 	for(i = 0; i < MAX_N_PERSONS; i++){
 	  pthread_t handle;
 	  pthread_create(&handle, NULL, passenger_thread, (void*) &i);
 	  
 	  sem_wait(&mutex);
+	  
+	  // Set the real-time priority of the current thread to 5
+	  // If you want to set the priority of another thread, specify the
+	  // appropriate pthread_t instead of the pthread_self() function.
+	  struct sched_param p;
+	  if(i == 2){
+	    p.sched_priority = 10;
+	  }else{
+	    p.sched_priority = 1;
+	  }
+	  if(pthread_setschedparam(handle, SCHED_RR, &p) != 0){
+	    perror("Could not set the thread priority");
+	  }
+	  
+	  
 	  pthread_detach(handle); // Ensure resources are reclaimed appropriately
 	}
 	
